@@ -88,6 +88,7 @@ func GetAllUsers() []Person {
 		if err != nil {
 			panic(err.Error())
 		}
+		GetLastLoginToken(temp.UserName)
 		personArr = append(personArr, temp)
 	}
 	return personArr
