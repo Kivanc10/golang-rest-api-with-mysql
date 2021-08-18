@@ -39,6 +39,7 @@ func addUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 	person := dbop.AddUser(reqBody)
 	if (dbop.Person{}) == person {
+		w.WriteHeader(http.StatusNoContent)
 		json.NewEncoder(w).Encode("This firstname is used already please choose different one")
 	} else {
 		//person.Token = r.Header.Get("Token") //
