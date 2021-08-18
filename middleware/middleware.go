@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -82,7 +83,7 @@ func CreateToken(userId uint64, name string) (string, error) {
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 	if err != nil {
-		return "", err
+		return "", errors.New("an error occured during the create token")
 	}
 	fmt.Println("jwt map --> ", atClaims)
 	return token, nil
