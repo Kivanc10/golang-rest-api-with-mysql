@@ -15,7 +15,7 @@ import (
 
 var mySignInKey = "jdnfksdmfksd"
 
-var deletedToken []string
+//var deletedToken []string
 
 func MiddleWare(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
