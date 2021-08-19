@@ -44,15 +44,29 @@ func Test_addUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
-	rr.Body = bytes.NewBuffer(bytePerson)
+	//rr.Body = bytes.NewBuffer(bytePerson)
 	handler := http.HandlerFunc(addUser)
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code : got %v want %v\n", status, http.StatusOK)
 	}
-	// expectedToken, _ := middleware.CreateToken(uint64(samplePerson.Id), samplePerson.UserName)
-	// samplePerson.Token = expectedToken
 
 	req.Header.Set("Token", samplePerson.Token)
 
+}
+
+func Test_login(t *testing.T) {
+	samplePerson := dbop.Person{Id: 1, UserName: "username", Password: "password"}
+	bytePerson, _ := json.Marshal(samplePerson)
+	req, err := http.NewRequest("POST", "/signIn", bytes.NewReader(bytePerson))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(login)
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code : got %v want %v\n", status, http.StatusOK)
+	}
+	req.Header.Set("Token", samplePerson.Token)
 }
