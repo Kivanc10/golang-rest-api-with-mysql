@@ -7,7 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/dgrijalva/jwt-go"
 	dbop "kivancaydogmus.com/apps/userApp/dbOp"
+	"kivancaydogmus.com/apps/userApp/middleware"
 )
 
 func Test_getUsers(t *testing.T) {
@@ -69,4 +71,28 @@ func Test_login(t *testing.T) {
 		t.Errorf("handler returned wrong status code : got %v want %v\n", status, http.StatusOK)
 	}
 	req.Header.Set("Token", samplePerson.Token)
+}
+
+func Test_deleteMe(t *testing.T) {
+	req, err := http.NewRequest("DELETE", "/user/me", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if myMap, ok := r.Context().Value("props").(jwt.MapClaims); !ok {
+			t.Errorf("props not in request %q", myMap)
+		} else {
+			username := myMap["user_name"]
+			if v, e := username.(string); !e {
+				t.Errorf("this map does not have user_name %q", v)
+			} else {
+				if id := dbop.DeleteMe(v); id == 0 {
+					t.Errorf("an error occured during the delete the user %q", v)
+				}
+			}
+		}
+	})
+	handler := middleware.MiddleWare(testHandler)
+	handler.ServeHTTP(rr, req)
 }
