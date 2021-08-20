@@ -2,12 +2,15 @@ package route
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/stretchr/testify/assert"
 	dbop "kivancaydogmus.com/apps/userApp/dbOp"
 	"kivancaydogmus.com/apps/userApp/middleware"
 )
@@ -95,4 +98,66 @@ func Test_deleteMe(t *testing.T) {
 	})
 	handler := middleware.MiddleWare(testHandler)
 	handler.ServeHTTP(rr, req)
+}
+
+func Test_updateUser(t *testing.T) {
+	samplePers := dbop.Person{Id: 52, UserName: "updated user name", Password: "updated password"}
+	bytePerson, _ := json.Marshal(samplePers)
+	req, err := http.NewRequest("PUT", "/users/update/me", bytes.NewReader(bytePerson))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(updateUser)
+
+	ctx := req.Context()
+	myMap := jwt.MapClaims{"user_name": "sample user name", "user_id": 52, "exp": time.Now().Add(time.Minute * 15).Unix(), "Token": ""}
+	ctx = context.WithValue(ctx, "props", myMap)
+	// testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	// 	// myMap := jwt.MapClaims{"user_name": "sample user name", "user_id": 52, "exp": time.Now().Add(time.Minute * 15).Unix()}
+	// 	// ctx = context.WithValue(ctx, "props", myMap)
+	// 	if myMap, ok := r.Context().Value("props").(jwt.MapClaims); !ok {
+	// 		t.Errorf("props not in request %q", myMap)
+	// 	} else {
+	// 		username := myMap["user_name"]
+	// 		if v, e := username.(string); !e {
+	// 			t.Errorf("this map does not have user_name %q", v)
+	// 		} else {
+	// 			if person, err := dbop.UpdateUser(bytePerson, samplePers.UserName); err != nil {
+	// 				t.Errorf("failed to update user %q", person)
+	// 			}
+	// 		}
+	// 	}
+	// })
+	req = req.WithContext(ctx)
+	handler.ServeHTTP(rr, req)
+
+	//handler := middleware.MiddleWare(testHandler)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+}
+
+func Test_getMe(t *testing.T) {
+	samplePerson := dbop.Person{Id: 1, UserName: "username", Password: "password", Token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE2MjkzMzA1MjYsInVzZXJfaWQiOjAsInVzZXJfbmFtZSI6InVzZXJuYW1lIn0.zvQPDxs4U1lIp3_UsxTCRdP5j7mH5hRGbf-adQKDGPs"}
+	req, err := http.NewRequest("GET", "/users/me", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	handler := middleware.MiddleWare(http.HandlerFunc(getMe))
+	ctx := req.Context()
+	myMap := jwt.MapClaims{"user_name": samplePerson.UserName, "user_id": samplePerson.Id, "exp": time.Now().Add(time.Minute * 15).Unix(), "Token": samplePerson.Token}
+	ctx = context.WithValue(ctx, "props", myMap)
+	req = req.WithContext(ctx)
+	handler.ServeHTTP(rr, req)
+	expected := `"\"please login again\"\n\"please authenticate\"\n"`
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	assert.Equal(t, expected, rr.Body.String())
 }

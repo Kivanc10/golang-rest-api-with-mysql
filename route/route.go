@@ -85,6 +85,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		username := myMap["user_name"]
 		//log.Print("username up ", username)
 		if v, e := username.(string); e {
+			w.WriteHeader(http.StatusConflict)
 			if person, err := dbop.UpdateUser(reqBody, v); err != nil {
 				fmt.Fprintf(w, "Failed to update user  !!!")
 			} else {
