@@ -65,8 +65,21 @@ After that, you have a RESTful API that is running at `http://127.0.0.1:8080`. I
   - `GET /todos/me` : It lists just the todos belong to the current user authenticated
 
 
-### If you have API client tools like `POSTMAN`, you can handle complicated operations easily
+### If you have API client tools like `Postman`, you can handle complicated operations easily
 
+If you create a new environment in Postman and declare variables you'll use , you make everything clear.
+You also should add a set of codes in the test section of some requests arrange automatically with the bearer token of the header of the request.(`signup,login,update,logout`)
+Before the code,you should define an environment token named `authToken` in section of Authorization of edit collection.
+Then past the code in `signup,login,update,logout` requests
+
+```JavaScript
+if (pm.response.code == 200){
+    pm.environment.set('authToken',pm.response.json()["Token"])
+}
+```
+After that,your header of the request will updated by valid tokens automatically to authenticate.
+
+### how to use endpoints
 ```
 # sign up the user via POST /signUp
 curl -X POST -H "Content-Type: application/json" -d `{ "PersonID":0,"UserName":"sample user name","Password":"12312321"}` http://localhost:8080/signUp
