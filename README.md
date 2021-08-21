@@ -108,4 +108,97 @@ curl -X POST -H "Authorization: Bearer ...JWT token here..." -d `{"Context" : "s
 # it returns the saved todo belong to the user authenticated
 ```
 
+#### Project layout
 
+```bash
+.
+├── dbOp                 main database operations of the project
+├── middleware           auth middleware and tokens will create
+├── operate              main application of the project
+├── route                routes operations of the project related to RESTful api functions
+└── static               static files belong to the project
+```
+
+### Working with JWT based authenticaton and auth middleware
+
+##### JWT
+  - JSON Web Token (JWT) is a self-contained way for securely transmitting information between parties as a JSON object. If you will deal with authorization and information exchange, the most logical thing you will do is use JWT.
+
+##### Auth middleware
+  - We have the authentication service and its adapter and the login middleware in place, we can create middleware that checks for authenticated users, having it redirect to the /login page if the user is not authenticated
+
+In that project,we create tokens if necessary such as `signUp,signIn,...` to make and save changes.Then we use auth middleware to access the current user if its token is valid. Auth middleware allows us to design a real secure system.
+
+#### to create tokens
+
+```Go
+
+func CreateToken(userId uint64, name string) (string, error) { // it accepts userId and username
+/* This function creates a token belong to the user with a set of information. The created token will be expired in 15 minutes */
+	var err error
+	//Creating Access Token
+	os.Setenv("ACCESS_SECRET", mySignInKey) // define a global access key
+	atClaims := jwt.MapClaims{} // create empty map to store keys-values belong to the user
+  # store infos into the map
+	atClaims["authorized"] = true
+	atClaims["user_id"] = userId
+	atClaims["user_name"] = name
+	atClaims["exp"] = time.Now().Add(time.Minute * 15).Unix() // token is valid for 15 minutes
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims) // use HS256 algorithm
+	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	if err != nil { // error handling
+		return "", errors.New("an error occured during the create token")
+	}
+	fmt.Println("jwt map --> ", atClaims)
+	return token, nil // return token created and no error if succeed
+}
+```
+
+#### to integrate auth middleware
+
+```Go
+func MiddleWare(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		
+		 
+			authHeader := strings.Split(r.Header.Get("Authorization"), "Bearer ") // split request header acc. to Bearer 
+			fmt.Printf("authheader -> %s and len -> %d\n", authHeader, len(authHeader))
+			if len(authHeader) != 2 || authHeader[0] == "null" { // ["Bearer ","Token..."],if it is not like that,there is an error there
+				//fmt.Println("Malformed token")
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("Malformed Token"))
+				log.Fatal("Malformed token")
+        }
+			
+				jwtToken := authHeader[1] // get the token
+				token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) { // parse the token
+					if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+						return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+					}
+					return []byte(mySignInKey), nil
+				})
+        // type conversion with jwt.MapClaims and to check the token is valid
+				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid { // if that token is valid
+					ctx := context.WithValue(r.Context(), "props", claims) // props is context key
+					// Access context values in handlers like this					
+					next.ServeHTTP(w, r.WithContext(ctx)) // if succeed serve http with context
+
+				} else { // if there is an error
+					fmt.Println("token err -> ", err)
+					//r.Header.Set("ExpiredToken", jwtToken)
+					//DelTokenIfExpired(jwtToken)
+					// usernameInter := claims["user_name"]
+					// if username, ok := usernameInter.(fmt.Stringer); ok {
+					// 	person := dbop.GetPersonToDelToken(username.String())
+					// 	dbop.DeleteTokenIfExpired(person)
+					// }
+
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte("you are Unauthorized or your token is expired"))
+				}
+			
+		}
+
+	})
+}
+```
