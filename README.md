@@ -68,8 +68,14 @@ After that, you have a RESTful API that is running at `http://127.0.0.1:8080`. I
 ### If you have API client tools like `Postman`, you can handle complicated operations easily
 
 If you create a new environment in Postman and declare variables you'll use , you make everything clear.
+
+<img src = "./imgs/environment.png" />
+
 You also should add a set of codes in the test section of some requests arrange automatically with the bearer token of the header of the request.(`signup,login,update,logout`)
 Before the code,you should define an environment token named `authToken` in section of Authorization of edit collection.
+
+<img src = "./imgs/authToken.png" />
+
 Then past the code in `signup,login,update,logout` requests
 
 ```JavaScript
