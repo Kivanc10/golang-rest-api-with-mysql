@@ -71,19 +71,25 @@ If you create a new environment in Postman and declare variables you'll use , yo
 
 <img src = "./imgs/environment.png" />
 
-You also should add a set of codes in the test section of some requests arrange automatically with the bearer token of the header of the request.(`signup,login,update,logout`)
+You also should add a set of codes in the test section of some requests arrange automatically with the bearer token of the header of the request.(`signup,login,getme,update,logout`)
 Before the code,you should define an environment token named `authToken` in section of Authorization of edit collection.
 
 <img src = "./imgs/authToken.png" />
 
-Then past the code in `signup,login,update,logout` requests
+Then past the code in `signup,login,getme,update,logout` requests
 
 ```JavaScript
 if (pm.response.code == 200){
     pm.environment.set('authToken',pm.response.json()["Token"])
 }
 ```
+<img src = "./imgs/testCode.png" />
+
 After that,your header of the request will updated by valid tokens automatically to authenticate.
+
+You must ensure that you choose that environment
+
+<img src="./imgs/chooseEnvironment.png" />
 
 ### how to use endpoints
 ```
