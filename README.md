@@ -205,4 +205,4 @@ func MiddleWare(next http.Handler) http.Handler {
 
 ### Database scheme
 
-<img src="./imgs/dbSchema.png" />
+<img src="./imgs/databaseSchemaNew.png" />
