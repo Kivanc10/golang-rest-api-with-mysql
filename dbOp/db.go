@@ -31,8 +31,8 @@ type Todo struct {
 }
 
 const (
-	username = "kivanc"
-	password = "infinitiyPower"
+	username = "username"
+	password = "password"
 	hostname = "127.0.0.1:3306"
 	dbname   = "article"
 )
